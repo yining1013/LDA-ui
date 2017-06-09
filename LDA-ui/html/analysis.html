@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title>LDA主题分析</title>
+		<link rel="stylesheet" href="../css/bootstrap.min.css" />
+		<link rel="stylesheet" href="../css/theme.bootstrap.min.css" />
+		<script src="../js/lib/jquery-1.11.3.min.js"></script>
+		<!--<script src="../js/lib/underscore-min.js"></script>-->
+		<!--<script type="text/javascript" src="../js/lib/backbone-min.js" ></script>-->
+		<script type="text/javascript" src="../js/lib/bootstrap.min.js"></script>
+		<script type="text/javascript" src="../js/lib/json2.js"></script>
+		<script type="text/javascript" src="../js/lib/echarts.min.js"></script>
+		<style>
+			#container{
+				display:flex;
+				margin-top: 30px;
+			}
+			.content{				
+				align-items: center;
+			}
+			#submit{
+				align-self: flex-start;
+				margin-left: -55px;
+			}
+			#input{
+				display: flex;
+							
+			}
+			#show_table{
+				width:1000px;
+				margin-top: 30px;
+			}
+			table th,td{
+				text-align: center;
+			}
+			#caption{
+				font-size: 21px;
+				color: black;
+				font-family: "黑体";
+				font-weight: bold;	
+			}
+		</style>
+	</head>
+
+	<body>
+		<ul class="nav nav-tabs">
+			<li role="presentation" class="active">
+				<a href="#">主题分析及查看相似内容</a>
+			</li>
+			<li role="presentation">
+				<a href="search.html">按主题查找文本</a>
+			</li>
+		</ul>
+		<div id="container">		
+			<div id="input"  style="margin-left:90px;" class="content">
+			<textarea class="form-control box" style="width:500px;" rows="15" placeholder="请输入文本..." id="textArea"></textarea>	
+			<button id="submit" class="btn btn-info btm-primary box" type="button" value="Input" onclick="clickButton();">提交</button>	
+			</div>
+			<div id="myChart" style="width: 600px;height:400px;margin-left: 50px;" class="content">
+			</div>			
+		</div>
+		<div id="similiarTable">
+			<table class="table table-bordered table-hover" style="margin-left:90px;" id="show_table">
+			<caption id="caption">相似文本</caption>
+			<thead class="navbar-default commonThead">
+				<th class="col-md-2">id</th>
+				<th class="col-md-7">文本内容</th>				
+			</thead>
+			<tbody id="tableBody">
+
+			</tbody>
+		</table>	
+		</div>
+	</body>
+	<script type="text/javascript">
+	var myChart=echarts.init(document.getElementById('myChart'));
+var option= {
+	title: {
+		text: '文本主题概率分析', subtext: ''
+	}
+	,
+	tooltip: {
+		trigger: 'axis'
+	}
+	,
+	legend: {
+		data: ['概率']
+	}
+	,
+	toolbox: {
+		show: true,
+		feature: {
+			dataZoom: {
+				yAxisIndex: 'none'
+			}
+			,
+			dataView: {
+				readOnly: false
+			}
+			,
+			magicType: {
+				type: ['line', 'bar']
+			}
+			,
+			restore: {}
+			,
+			saveAsImage: {}
+		}
+	}
+	,
+	xAxis: {
+		type: 'category', 
+		boundaryGap: false, 
+		data: ['主题一', '主题二', '主题三', '主题四', '主题五', '主题六', '主题七']
+	}
+	,
+	yAxis: {
+		type: 'value',
+		axisLabel: {
+			formatter: '{value}'
+		}
+	}
+	,
+	series: [ {
+		name: '概率值',
+		type: 'line',
+		data: [0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0],
+		markPoint: {
+			data: [ {
+				type: 'max', name: '最大值'
+			}
+			,
+			{
+				type: 'min', name: '最小值'
+			}
+			]
+		}
+		,
+		markLine: {
+			data: [ {
+				type: 'average', name: '平均值'
+			}
+			]
+		}
+	}
+	]
+}
+
+;
+myChart.setOption(option);
+	</script>
+	<script type="text/javascript">
+	function clickButton() {
+	console.log('click');
+	var content=$('#textArea').val();
+	if(content.length<10){
+		alert("文本长度必须大于10");
+	}
+	else{
+	$.ajax({
+		type: "post",
+		url: "/search/content",
+		async: true,
+		data: {"content":content},
+		dataType: "json",
+		success:function(data, textStatus) {
+
+						myChart.setOption({
+							xAxis: {
+								data: data.label
+							},
+							series: [{
+								// 根据名字对应到相应的系列
+								name: '概率值',
+								data: data.probability
+							}]
+						});
+			window.similiarContent = data.content;
+			for(var i=0;i<similiarContent.length;i++){
+				var tr=$("<tr></tr>");
+				var tdID=$("<td></td>");
+				var tdContent=$("<td></td>");
+				tdID.text(i+1);
+				tdContent.text(similiarContent[i]);
+				tr.append(tdID);
+				tr.append(tdContent);
+				$('#tableBody').append(tr);
+			}
+		},
+		error: function(XMLHttpRequest, textStatus, errorThrown) {
+				alert("加载数据错误");
+		}
+	});
+}
+}
+	</script>
+</html>

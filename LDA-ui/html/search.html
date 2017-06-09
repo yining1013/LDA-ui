@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8" />
+		<title>LDA主题分析</title>
+		<link rel="stylesheet" href="../css/bootstrap.min.css" />
+		<link rel="stylesheet" href="../css/theme.bootstrap.min.css" />
+		<link rel="stylesheet" href="../css/bootstrap-tokenfield.min.css" />
+		<link rel="stylesheet" href="../css/jquery-ui.css" />
+		<link rel="stylesheet" href="../css/jquery-ui.structure.css" />
+		<link rel="stylesheet" href="../css/jquery-ui.theme.css" />
+		<link rel="stylesheet" href="../css/theme.bootstrap.min.css" />
+		<link rel="stylesheet" href="../css/tokenfield-typeahead.min.css" />
+		<script src="../js/lib/jquery-1.11.3.min.js"></script>
+		<!--<script src="../js/lib/underscore-min.js"></script>-->
+		<!--<script type="text/javascript" src="../js/lib/backbone-min.js" ></script>-->
+		<script type="text/javascript" src="../js/lib/bootstrap.min.js"></script>
+		<script type="text/javascript" src="../js/lib/json2.js"></script>
+		<script type="text/javascript" src="../js/lib/echarts.min.js"></script>
+		<script type="text/javascript" src="../js/lib/bootstrap-tokenfield.min.js" ></script>
+		<script type="text/javascript" src="../js/lib/jqueryUI.js" ></script>
+		<script type="text/javascript" src="../js/lib/jquery-ui.min.js" ></script>
+		
+		<style> 
+		#tokenfield{
+			width: 300px;
+			
+		}
+		#submit{
+			margin-left: 50px;
+		}
+		#choose{
+			display: flex;
+			margin-left: 90px;
+			margin-top: 60px;
+		}
+		table th,td{
+			text-align: center;
+		}
+		table{
+			margin-top: 20px;
+		}
+		#caption{
+				font-size: 21px;
+				color: black;
+				font-family: "黑体";
+				font-weight: bold;	
+			}
+		</style>
+	</head>
+
+	<body>
+		<ul class="nav nav-tabs">
+			<li role="presentation" >
+				<a href="analysis.html">主题分析及查看相似内容</a>
+			</li>
+			<li role="presentation" class="active">
+				<a href="#">按主题查找</a>
+			</li>
+		</ul>
+		<div id="container">
+			<div id="choose">
+			<label style="padding-top: 3px;">主题选择：</label>
+			<input type="text" class="form-control" id="tokenfield"/>
+			<button class="btn btn-info btn-sm" id="submit" onclick="search();">提交</button>
+			</div>
+			<table class="table table-bordered table-hover" style="margin-left:90px;width:1000px;" id="show_table">
+			<caption id="caption">文本查询结果</caption>
+			<thead class="navbar-default commonThead">
+				<th class="col-md-2">id</th>
+				<th class="col-md-7">文本内容</th>				
+			</thead>
+			<tbody id="tableBody">
+
+			</tbody>
+		</table>	
+		</div>
+
+	</body>
+	<script type="text/javascript">
+	var label=['辟谣','财经','电视剧','电影','动漫','读书','法律','房产','搞笑','股市','国际','婚庆','家居','健康','军事','科技','科普','历史','旅游','美女模特','美食','美图','美妆','萌宠','明星','汽车','情感','三农','社会','设计','时尚','视频','收藏','瘦身','数码','体育','校园','星座','养生','艺术','音乐','游戏','育儿','运动健身','正能量','政务','宗教','综艺','其他1','其他2'];
+	var sourceData=[];
+	for(var i=0;i<label.length;i++){
+		var a={};
+		a['value']=i+1;
+		a['label']=label[i];
+		sourceData.push(a);
+	}
+	console.log(sourceData);
+	$(document).ready(function() {
+	$('#tokenfield').tokenfield( {
+		autocomplete: {
+			source:sourceData, 
+			delay: 100
+		},
+		showAutocompleteOnFocus: true,
+		limit: 3
+	}
+	);
+}
+	
+);
+
+function search() {
+//	var indexs=$('#tokenfield').val().split(',');
+//	var arr=[];
+//	for(var i=0;i<indexs.length;i++){
+//		arr.push(index[i]);
+//	};
+	$.ajax( {
+		type: "post", 
+		url: "/search/label", 
+		async: true,
+		data: {"index":$('#tokenfield').val()}, 
+		dataType:"json",
+		success: function(data, textStatus) {
+			console.log(data.content);
+			window.similiarContent = data.content;
+			for(var i=0;i<similiarContent.length;i++){
+				var tr=$("<tr></tr>");
+				var tdID=$("<td></td>");
+				var tdContent=$("<td></td>");
+				tdID.text(i+1);
+				tdContent.text(similiarContent[i]);
+				tr.append(tdID);
+				tr.append(tdContent);
+				$('#tableBody').append(tr);
+			}
+		},
+		error: function() {}
+	}
+	);
+}</script>
+
+</html>
